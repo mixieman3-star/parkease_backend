@@ -43,11 +43,13 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-connectDB(process.env.MONGODB_URI)
-  .then(() => app.listen(PORT, () => console.log(`Server listening on ${PORT}`)))
-  .catch((err) => {
-    console.error('Startup failed:', err.message);
-    process.exit(1);
-  });
+// Bind the port first so the platform health check passes and requests get a
+// real error instead of a 502 "Application failed to respond" when the DB is
+// unreachable. ponytail: no retry/backoff lib — log and let the platform restart.
+app.listen(PORT, () => console.log(`Server listening on ${PORT}`));
+
+connectDB(process.env.MONGODB_URI).catch((err) => {
+  console.error('MongoDB connection failed:', err.message);
+});
 
 module.exports = app;
